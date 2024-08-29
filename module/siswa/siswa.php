@@ -1,141 +1,111 @@
-            <div class="row">
-                <div class="col-lg-12">
-					<h3 class="page-header"><strong>Data Siswa</strong></h3>
-                </div>
-                <!-- /.col-lg-12 -->
+<div class="row">
+    <div class="col-lg-12">
+        <h3 class="page-header"><strong>Data Siswa</strong></h3>
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <?php
+                $klas = isset($_GET['kls']) ? $_GET['kls'] : '';
+                if ($klas == "semua") {
+                    echo "Data Semua Siswa";
+                } else {
+                    $stmt = $connection->prepare("SELECT nama FROM kelas WHERE idk = ?");
+                    $stmt->bind_param('i', $klas);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $row = $result->fetch_assoc();
+                    echo "Data Siswa Kelas " . htmlspecialchars($row['nama']);
+                    $stmt->close();
+                }
+                ?>
             </div>
-            <!-- /.row -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading">
-                          <?php
-                          $klas=$_GET['kls'];
-                          if($klas=="semua")
-                          {
-                          	echo "Data Semua Siswa";
-                          }
-                          else
-                          {
-                          	$claris=mysql_query("select * from kelas where idk='$_GET[kls]'");
-                            $click=mysql_fetch_array($claris);
-                            echo "Data Siswa Kelas $click[nama]";
-                          }
-                           ?>
-                        </div>
-                        <!-- /.panel-heading -->
-                        <div class="panel-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-bordered table-hover" id="dataTables-example">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-center">NIS</th>
-                                            <th class="text-center" width="30%">Nama</th>
-                                            <th class="text-center">JK</th>
-                                            <th class="text-center">Kelas</th>
-                                            <th class="text-center">No Telepon</th>
-                                            <th class="text-center">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover" id="dataTables-example">
+                        <thead>
+                            <tr>
+                                <th class="text-center">NIS</th>
+                                <th class="text-center" width="30%">Nama</th>
+                                <th class="text-center">JK</th>
+                                <th class="text-center">Kelas</th>
+                                <th class="text-center">No Telepon</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $stmt = $connection->prepare($klas == "semua" ? "SELECT * FROM siswa" : "SELECT * FROM siswa WHERE idk = ?");
+                            if ($klas != "semua") {
+                                $stmt->bind_param('i', $klas);
+                            }
+                            $stmt->execute();
+                            $result = $stmt->get_result();
 
-<?php
-$no=1;
-$klas=$_GET['kls'];
-if($klas=="semua")
-{
-	$sql=mysql_query("select * from siswa");
-}
-else
-{
-	$sql=mysql_query("select * from siswa where idk='$_GET[kls]'");
-}
+                            while ($rs = $result->fetch_assoc()) {
+                                // Fetch class and school information
+                                $stmtClass = $connection->prepare("SELECT * FROM kelas WHERE idk = ?");
+                                $stmtClass->bind_param('i', $rs['idk']);
+                                $stmtClass->execute();
+                                $classResult = $stmtClass->get_result();
+                                $class = $classResult->fetch_assoc();
 
-	while($rs=mysql_fetch_array($sql))
-	{
-		$sqlw=mysql_query("select * from kelas where idk='$rs[idk]'");
-		$rsw=mysql_fetch_array($sqlw);
-		$sqlb=mysql_query("select * from sekolah where id='$rsw[id]'");
-		$rsb=mysql_fetch_array($sqlb);
+                                $stmtSchool = $connection->prepare("SELECT * FROM sekolah WHERE id = ?");
+                                $stmtSchool->bind_param('i', $class['id']);
+                                $stmtSchool->execute();
+                                $schoolResult = $stmtSchool->get_result();
+                                $school = $schoolResult->fetch_assoc();
 
-if($_SESSION['level']=="admin_guru"){
+                                // Display student data
+                                if ($_SESSION['level'] == "admin_guru" && $school['id'] == $_SESSION['id']) {
+                                    echo '<tr class="odd gradeX">';
+                                    echo '<td>' . htmlspecialchars($rs['nis']) . '</td>';
+                                    echo '<td>' . htmlspecialchars($rs['nama']) . '</td>';
+                                    echo '<td class="text-center">' . ($rs['jk'] == "L" ? "Laki - Laki" : "Perempuan") . '</td>';
+                                    echo '<td>' . htmlspecialchars($rs['idk']) . '</td>';
+                                    echo '<td>' . htmlspecialchars($rs['tlp']) . '</td>';
+                                    echo '<td class="text-center">';
+                                    echo '<a href="./media.php?module=input_siswa&act=edit&ids=' . urlencode($rs['ids']) . '"><button type="button" class="btn btn-info">Edit</button></a> ';
+                                    echo '<a href="./module/simpan.php?act=hapus&ids=' . urlencode($rs['ids']) . '"><button type="button" class="btn btn-danger">Hapus</button></a>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                } else {
+                                    echo '<tr class="odd gradeX">';
+                                    echo '<td>' . htmlspecialchars($rs['nis']) . '</td>';
+                                    echo '<td>' . htmlspecialchars($rs['nama']) . '</td>';
+                                    echo '<td class="text-center">' . ($rs['jk'] == "L" ? "Laki - Laki" : "Perempuan") . '</td>';
+                                    echo '<td>' . htmlspecialchars($class['nama']) . '</td>';
+                                    echo '<td>' . htmlspecialchars($rs['tlp']) . '</td>';
+                                    echo '<td class="text-center">';
+                                    echo '<a href="./media.php?module=detail_siswa&act=details&ids=' . urlencode($rs['ids']) . '"><button type="button" class="btn btn-warning">Details</button></a> ';
+                                    echo '<a href="./media.php?module=input_siswa&act=edit&ids=' . urlencode($rs['ids']) . '"><button type="button" class="btn btn-info">Edit</button></a> ';
+                                    echo '<a href="./module/simpan.php?act=hapus&ids=' . urlencode($rs['ids']) . '"><button type="button" class="btn btn-danger">Hapus</button></a>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                }
 
-if($rsb['id']==$_SESSION['id']){
-?>                                        <tr class="odd gradeX">
-                                            <td><?php echo"$rs[nis]";  ?></td>
-                                            <td><?php echo"$rs[nama]";  ?></td>
-<?php
-if($rs['jk']=="L"){
-?>
-                                            <td class="text-center">Laki - Laki</td>
-<?php
-}else{
-?>
-                                            <td class="text-center">Perempuan</td>
-<?php
-}
-?>
-                                            <td><?php echo"$rs[idk]";  ?></td>
-                                            <td><?php echo"$rs[tlp]";  ?></td>
+                                // Close statements
+                                $stmtClass->close();
+                                $stmtSchool->close();
+                            }
 
-                                        <td class="text-center">
-										<a href="./././media.php?module=input_siswa&act=edit&ids=<?php echo $rs['ids'] ?>">
-										<button type="button" class="btn btn-info">Edit
-										</button> <a href="././module/simpan.php?act=hapus&ids=<?php echo $rs['ids'] ?>">
-										<button type="button" class="btn btn-danger">Hapus</button></a></td>
-
-                                        </tr>
-<?php
-}
-}else{
-?>
-                                        <tr class="odd gradeX">
-                                            <td><?php echo"$rs[nis]";  ?></td>
-                                            <td><?php echo"$rs[nama]";  ?></td>
-<?php
-if($rs['jk']=="L"){
-?>
-                                            <td class="text-center">Laki - Laki</td>
-<?php
-}else{
-?>
-                                            <td class="text-center">Perempuan</td>
-<?php
-}
-?>
-                                        <td><?php
-                                        $namakelas=mysql_query("SELECT * FROM kelas WHERE idk='$rs[idk]'");
-                                        $nama_kelas=mysql_fetch_array($namakelas);
-                                         echo"$nama_kelas[nama]";  ?></td>
-                                        <td><?php echo"$rs[tlp]";  ?></td>
-
-										<td class="text-center">
-
-										<a href="./././media.php?module=detail_siswa&act=details&ids=<?php echo $rs['ids'] ?>">
-										<button type="button" class="btn btn-warning">Details</button> </a>
-
-										<a href="./././media.php?module=input_siswa&act=edit&ids=<?php echo $rs['ids'] ?>">
-										<button type="button" class="btn btn-info">Edit</button> </a>
-
-
-										<a href="././module/simpan.php?act=hapus&ids=<?php echo $rs['ids'] ?>">
-										<button type="button" class="btn btn-danger">Hapus</button></a>
-
-										</td>
-                                        </tr>
-<?php
-}
-}
-?>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!-- /.table-responsive -->
-                        </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
+                            // Close main statement
+                            $stmt->close();
+                            ?>
+                        </tbody>
+                    </table>
                 </div>
-                <!-- /.col-lg-12 -->
+                <!-- /.table-responsive -->
             </div>
-            <!-- /.row -->
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
