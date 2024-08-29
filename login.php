@@ -2,10 +2,8 @@
 <html>
 
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>SISTEM ABSENSI SISWA</title>
 
     <!-- Core CSS - Include with every page -->
@@ -14,7 +12,6 @@
 
     <!-- SB Admin CSS - Include with every page -->
     <link href="css/sb-admin.css" rel="stylesheet">
-
 </head>
 
 <body>
@@ -23,10 +20,14 @@
             <div class="col-md-4 col-md-offset-4">
               <?php
               include 'config/conn.php';
-              $sql=mysql_query("select * from sekolah where id='2'");
-              $rs=mysql_fetch_array($sql);
-               ?>
-              <marquee><h2>Selamat Datang di Website Absensi <?php echo $rs['nama']; ?>, Silahkan Admin/Guru/Siswa Login dibawah ini.</h2></marquee>
+              $sql = mysqli_query($connection, "SELECT * FROM sekolah WHERE id='2'");
+              if ($sql) {
+                  $rs = mysqli_fetch_array($sql);
+              } else {
+                  echo "Error: " . mysqli_error($connection);
+              }
+              ?>
+              <!-- <marquee><h2>Selamat Datang di Website Absensi <?php echo htmlspecialchars($rs['nama'], ENT_QUOTES, 'UTF-8'); ?>, Silahkan Admin/Guru/Siswa Login dibawah ini.</h2></marquee> -->
                 <div class="login-panel panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title">Login</h3>
@@ -38,10 +39,10 @@
                                     <input class="form-control" placeholder="Username" name="username" required autofocus>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="password" type="password" required value="">
+                                    <input class="form-control" placeholder="Password" name="password" type="password" required>
                                 </div>
                                 <!-- Change this to a button or input when using this as a form -->
-                                <button class="btn btn-lg btn-success btn-block">Login</a>
+                                <button class="btn btn-lg btn-success btn-block" type="submit">Login</button>
                             </fieldset>
                         </form>
                     </div>
@@ -57,7 +58,6 @@
 
     <!-- SB Admin Scripts - Include with every page -->
     <script src="js/sb-admin.js"></script>
-
 </body>
 
 </html>
