@@ -7,4 +7,3 @@ unset($_SESSION['ortu']);
 unset($_SESSION['idk']);
 
 header('location:index.php');
-?>

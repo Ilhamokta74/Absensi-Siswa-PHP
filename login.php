@@ -18,16 +18,16 @@
     <div class="container">
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
-              <?php
-              include 'config/conn.php';
-              $sql = mysqli_query($connection, "SELECT * FROM sekolah WHERE id='2'");
-              if ($sql) {
-                  $rs = mysqli_fetch_array($sql);
-              } else {
-                  echo "Error: " . mysqli_error($connection);
-              }
-              ?>
-              <!-- <marquee><h2>Selamat Datang di Website Absensi <?php echo htmlspecialchars($rs['nama'], ENT_QUOTES, 'UTF-8'); ?>, Silahkan Admin/Guru/Siswa Login dibawah ini.</h2></marquee> -->
+                <?php
+                include 'config/conn.php';
+                $sql = mysqli_query($connection, "SELECT * FROM sekolah WHERE id='2'");
+                if ($sql) {
+                    $rs = mysqli_fetch_array($sql);
+                } else {
+                    echo "Error: " . mysqli_error($connection);
+                }
+                ?>
+                <!-- <marquee><h2>Selamat Datang di Website Absensi <?php echo htmlspecialchars($rs['nama'], ENT_QUOTES, 'UTF-8'); ?>, Silahkan Admin/Guru/Siswa Login dibawah ini.</h2></marquee> -->
                 <div class="login-panel panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title">Login</h3>

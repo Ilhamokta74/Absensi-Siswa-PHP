@@ -1,291 +1,251 @@
 <?php
 include "../config/conn.php";
 
-if($_GET['act']=="input_user"){
-$pw=md5($_POST['pass']);
-mysql_query("INSERT INTO user(nama,pass,level,id)
-VALUES(
-'$_POST[nama]',
-'$pw',
-'admin_guru','$_POST[sekolah]')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=user')</script>";
-
-}
-if($_GET['act']=="edit_user"){
-if(!empty($_POST['pass'])){
-$pw=md5($_POST['pass']);
-mysql_query("update user set nama='$_POST[nama]',
-pass='$pw',id='$_POST[sekolah]' where idu='$_POST[idu]'");
-}else{
-mysql_query("update user set nama='$_POST[nama]',id='$_POST[sekolah]' where idu='$_POST[idu]'");
-
-}
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=user')</script>";
-
-}
-
-if($_GET['act']=="hapus_user"){
-mysql_query("delete from user where idu='$_GET[idu]'");
-echo "<script>window.alert('Data Terhapus');
-        window.location=('../media.php?module=user')</script>";
-
-}
-
-
-
-if($_GET['act']=="input_siswa")
+function alertAndRedirect($message, $location)
 {
-$mr=md5($_POST["k_password"]);
-mysql_query("INSERT INTO siswa(nis,nama,jk,alamat,idk,tlp,bapak,k_bapak,ibu,k_ibu,pass)
-VALUES(
-'$_POST[nis]',
-'$_POST[nama]',
-'$_POST[jk]',
-'$_POST[alamat]',
-'$_POST[kelas]',
-'$_POST[tlp]',
-'$_POST[bapak]',
-'$_POST[k_bapak]',
-'$_POST[ibu]',
-'$_POST[k_ibu]',
-'$mr')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=siswa&kls=semua')</script>";
-
+        echo "<script>
+        window.alert('$message');
+        window.location='$location';
+    </script>";
 }
 
-if($_GET['act']=="edit_siswa"){
-$mr=md5($_POST["k_password"]);
-mysql_query("UPDATE siswa SET nis='$_POST[nis]',
-nama='$_POST[nama]',
-jk='$_POST[jk]',
-alamat='$_POST[alamat]',
-idk='$_POST[kelas]',
-tlp='$_POST[tlp]',
-bapak='$_POST[bapak]',
-k_bapak='$_POST[k_bapak]',
-ibu='$_POST[ibu]',
-k_ibu='$_POST[k_ibu]',
-pass='$mr'  where ids='$_POST[id]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=siswa&kls=semua')</script>";
+$act = isset($_GET['act']) ? $_GET['act'] : '';
 
+if ($act == "input_user") {
+        $pw = md5($_POST['pass']);
+        $stmt = $connection->prepare("INSERT INTO user (nama, pass, level, id) VALUES (?, ?, 'admin_guru', ?)");
+        $stmt->bind_param('sss', $_POST['nama'], $pw, $_POST['sekolah']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=user');
 }
 
-if($_GET['act']=="siswa_det"){
-	$pw=md5($_POST['pass']);
-if(!empty($_POST['pass'])){
-mysql_query("UPDATE siswa SET pass='$pw' where ids='$_POST[id]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=siswa_det')</script>";
-}else{
-echo "<script>window.alert('Isi Password');
-        window.location=('../media.php?module=siswa_det')</script>";
-
-}
-}
-
-if($_GET['act']=="hapus"){
-mysql_query("delete from siswa where ids='$_GET[ids]'");
-echo "<script>window.alert('Data Terhapus');
-        window.location=('../media.php?module=siswa&kls=semua')</script>";
-
-}
-if($_GET['act']=="input_absen"){
-//echo "$_GET[klas] <br>";
-//echo "$_GET[tanggal] <br>";
-//echo "$_GET[bulan] <br>";
-//echo "$_GET[tahun] <br>";
-
-
-	$sql=mysql_query("select * from siswa where idk='$_GET[kelas]' ");
-	while($rs=mysql_fetch_array($sql)){
-
-$ra=$rs['ids'];
-$tgl=$_GET['tanggal'];
-	$sqla=mysql_query("select * from absen where ids='$rs[ids]' and tgl='$tgl' and idj='$_GET[idj]'");
-	$rsa=mysql_fetch_array($sqla);
-	$conk=mysql_num_rows($sqla);
-
-//echo "$rs[nama] $_POST[$ra] <br>";
-if($conk==0){
-
-mysql_query("INSERT INTO absen(ids,idj,tgl,ket)
-VALUES(
-'$rs[ids]',
-'$_GET[idj]',
-'$tgl',
-'$_POST[$ra]')");
-//echo "SIMPAN";
-}else{
-mysql_query("update absen set ket='$_POST[$ra]' where ids='$rs[ids]' and tgl='$tgl' and idj='$_GET[idj]'");
-//echo "edit";
-
+if ($act == "edit_user") {
+        if (!empty($_POST['pass'])) {
+                $pw = md5($_POST['pass']);
+                $stmt = $connection->prepare("UPDATE user SET nama = ?, pass = ?, id = ? WHERE idu = ?");
+                $stmt->bind_param('sssi', $_POST['nama'], $pw, $_POST['sekolah'], $_POST['idu']);
+        } else {
+                $stmt = $connection->prepare("UPDATE user SET nama = ?, id = ? WHERE idu = ?");
+                $stmt->bind_param('ssi', $_POST['nama'], $_POST['sekolah'], $_POST['idu']);
+        }
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=user');
 }
 
-
-	}
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=jadwal_mengajar')</script>";
-
+if ($act == "hapus_user") {
+        $stmt = $connection->prepare("DELETE FROM user WHERE idu = ?");
+        $stmt->bind_param('i', $_GET['idu']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Terhapus', '../media.php?module=user');
 }
 
-
-if($_GET['act']=="input_sekolah"){
-mysql_query("INSERT INTO sekolah(kode,nama,alamat)
-VALUES(
-'$_POST[kode]',
-'$_POST[nama]',
-'$_POST[alamat]')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=sekolah')</script>";
-
-}
-if($_GET['act']=="edit_sekolah"){
-mysql_query("update sekolah set kode='$_POST[kode]',
-nama='$_POST[nama]',
-alamat='$_POST[alamat]' where id='$_POST[id]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=sekolah')</script>";
-
-}
-if($_GET['act']=="hapus_sekolah"){
-mysql_query("delete from sekolah where id='$_GET[id]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=sekolah')</script>";
-
+if ($act == "input_siswa") {
+        $mr = md5($_POST["k_password"]);
+        $stmt = $connection->prepare("INSERT INTO siswa (nis, nama, jk, alamat, idk, tlp, bapak, k_bapak, ibu, k_ibu, pass) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('sssssssssss', $_POST['nis'], $_POST['nama'], $_POST['jk'], $_POST['alamat'], $_POST['kelas'], $_POST['tlp'], $_POST['bapak'], $_POST['k_bapak'], $_POST['ibu'], $_POST['k_ibu'], $mr);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=siswa&kls=semua');
 }
 
-
-
-
-if($_GET['act']=="input_kelas"){
-mysql_query("INSERT INTO kelas(id,nama)
-VALUES(
-'$_POST[id]',
-'$_POST[nama]')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=kelas')</script>";
-
-}
-if($_GET['act']=="edit_kelas"){
-mysql_query("update kelas set id='$_POST[id]',
-nama='$_POST[nama]' where idk='$_POST[idk]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=kelas')</script>";
-
-}
-if($_GET['act']=="hapus_kelas"){
-mysql_query("delete from kelas  where idk='$_GET[idk]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=kelas')</script>";
-
+if ($act == "edit_siswa") {
+        $mr = md5($_POST["k_password"]);
+        $stmt = $connection->prepare("UPDATE siswa SET nis = ?, nama = ?, jk = ?, alamat = ?, idk = ?, tlp = ?, bapak = ?, k_bapak = ?, ibu = ?, k_ibu = ?, pass = ? WHERE ids = ?");
+        $stmt->bind_param('sssssssssssi', $_POST['nis'], $_POST['nama'], $_POST['jk'], $_POST['alamat'], $_POST['kelas'], $_POST['tlp'], $_POST['bapak'], $_POST['k_bapak'], $_POST['ibu'], $_POST['k_ibu'], $mr, $_POST['id']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=siswa&kls=semua');
 }
 
-
-
-if($_GET['act']=="input_pelajaran"){
-mysql_query("INSERT INTO mata_pelajaran(nama_mp)
-VALUES(
-'$_POST[nama_mp]')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=mata_pelajaran')</script>";
-
-}
-if($_GET['act']=="edit_pelajaran"){
-mysql_query("update mata_pelajaran set nama_mp='$_POST[nama_mp]' where idm='$_POST[idm]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=mata_pelajaran')</script>";
-
-}
-if($_GET['act']=="hapus_pelajaran"){
-mysql_query("delete from mata_pelajaran  where idm='$_GET[idm]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=mata_pelajaran')</script>";
-
+if ($act == "siswa_det") {
+        if (!empty($_POST['pass'])) {
+                $pw = md5($_POST['pass']);
+                $stmt = $connection->prepare("UPDATE siswa SET pass = ? WHERE ids = ?");
+                $stmt->bind_param('si', $pw, $_POST['id']);
+                $stmt->execute();
+                $stmt->close();
+                alertAndRedirect('Data Tersimpan', '../media.php?module=siswa_det');
+        } else {
+                alertAndRedirect('Isi Password', '../media.php?module=siswa_det');
+        }
 }
 
-
-if($_GET['act']=="input_jadwal"){
-mysql_query("INSERT INTO jadwal(idh,idg,idk,idm,jam_mulai,jam_selesai)
-VALUES(
-'$_POST[hari]','$_POST[guru]','$_POST[kelas]','$_POST[pelajaran]','$_POST[jam_mulai]','$_POST[jam_selesai]')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=senin')</script>";
-
-}
-if($_GET['act']=="edit_jadwal"){
-mysql_query("update jadwal set idh='$_POST[hari]' ,
-idg='$_POST[guru]',
-idk='$_POST[kelas]',
-idm='$_POST[pelajaran]',
-jam_mulai='$_POST[jam_mulai]',
-jam_selesai='$_POST[jam_selesai]' where idj='$_POST[idj]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=senin')</script>";
-
-}
-if($_GET['act']=="hapus_jadwal"){
-mysql_query("delete from jadwal where idj='$_GET[idj]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=senin')</script>";
-
+if ($act == "hapus") {
+        $stmt = $connection->prepare("DELETE FROM siswa WHERE ids = ?");
+        $stmt->bind_param('i', $_GET['ids']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Terhapus', '../media.php?module=siswa&kls=semua');
 }
 
+if ($act == "input_absen") {
+        $tgl = $_GET['tanggal'];
+        $kelas = $_GET['kelas'];
+        $idj = $_GET['idj'];
 
-if($_GET['act']=="input_guru"){
-$mrg=md5($_POST['k_password']);
-mysql_query("INSERT INTO guru(nip,nama,jk,alamat,idk,pass)
-VALUES(
-'$_POST[nip]',
-'$_POST[nama]',
-'$_POST[jk]',
-'$_POST[alamat]',
-'$_POST[kelas]',
-'$mrg')");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=guru&kls=semua')</script>";
+        $sql = $connection->prepare("SELECT ids FROM siswa WHERE idk = ?");
+        $sql->bind_param('i', $kelas);
+        $sql->execute();
+        $result = $sql->get_result();
 
-}
-if($_GET['act']=="edit_guru"){
-$mrg=md5($_POST['k_password']);
-mysql_query("update guru set nip='$_POST[nip]',
-nama='$_POST[nama]',
-jk='$_POST[jk]',
-alamat='$_POST[alamat]',
-pass='$mrg',
-idk='$_POST[kelas]' where idg='$_POST[idg]'");
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=guru&kls=semua')</script>";
+        while ($rs = $result->fetch_assoc()) {
+                $ra = $rs['ids'];
+                $stmt = $connection->prepare("SELECT * FROM absen WHERE ids = ? AND tgl = ? AND idj = ?");
+                $stmt->bind_param('isi', $ra, $tgl, $idj);
+                $stmt->execute();
+                $absenResult = $stmt->get_result();
+                $conk = $absenResult->num_rows;
 
-}
-if($_GET['act']=="hapus_guru"){
-mysql_query("delete from guru  where idg='$_GET[idg]'");
-echo "<script>window.alert('Data Guru Sudah Terhapus');
-		window.location=('../media.php?module=guru&kls=semua')</script>";
-
+                if ($conk == 0) {
+                        $stmt = $connection->prepare("INSERT INTO absen (ids, idj, tgl, ket) VALUES (?, ?, ?, ?)");
+                        $stmt->bind_param('iiss', $ra, $idj, $tgl, $_POST[$ra]);
+                } else {
+                        $stmt = $connection->prepare("UPDATE absen SET ket = ? WHERE ids = ? AND tgl = ? AND idj = ?");
+                        $stmt->bind_param('siii', $_POST[$ra], $ra, $tgl, $idj);
+                }
+                $stmt->execute();
+                $stmt->close();
+        }
+        alertAndRedirect('Data Tersimpan', '../media.php?module=jadwal_mengajar');
 }
 
-
-
-if($_GET['act']=="guru_det"){
-if(!empty($_POST['pass'])){
-$pw=md5($_POST['pass']);
-mysql_query("update guru set nama='$_POST[nama]',
-jk='$_POST[jk]',
-alamat='$_POST[alamat]',pass='$pw' where idg='$_POST[idg]'");
-}else{
-mysql_query("update guru set nama='$_POST[nama]',
-jk='$_POST[jk]',
-alamat='$_POST[alamat]' where idg='$_POST[idg]'");
-
-}
-echo "<script>window.alert('Data Tersimpan');
-        window.location=('../media.php?module=guru_det')</script>";
-
+if ($act == "input_sekolah") {
+        $stmt = $connection->prepare("INSERT INTO sekolah (kode, nama, alamat) VALUES (?, ?, ?)");
+        $stmt->bind_param('sss', $_POST['kode'], $_POST['nama'], $_POST['alamat']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=sekolah');
 }
 
+if ($act == "edit_sekolah") {
+        $stmt = $connection->prepare("UPDATE sekolah SET kode = ?, nama = ?, alamat = ? WHERE id = ?");
+        $stmt->bind_param('sssi', $_POST['kode'], $_POST['nama'], $_POST['alamat'], $_POST['id']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=sekolah');
+}
 
-?>
+if ($act == "hapus_sekolah") {
+        $stmt = $connection->prepare("DELETE FROM sekolah WHERE id = ?");
+        $stmt->bind_param('i', $_GET['id']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=sekolah');
+}
+
+if ($act == "input_kelas") {
+        $stmt = $connection->prepare("INSERT INTO kelas (id, nama) VALUES (?, ?)");
+        $stmt->bind_param('ss', $_POST['id'], $_POST['nama']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=kelas');
+}
+
+if ($act == "edit_kelas") {
+        $stmt = $connection->prepare("UPDATE kelas SET id = ?, nama = ? WHERE idk = ?");
+        $stmt->bind_param('sss', $_POST['id'], $_POST['nama'], $_POST['idk']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=kelas');
+}
+
+if ($act == "hapus_kelas") {
+        $stmt = $connection->prepare("DELETE FROM kelas WHERE idk = ?");
+        $stmt->bind_param('i', $_GET['idk']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=kelas');
+}
+
+if ($act == "input_pelajaran") {
+        $stmt = $connection->prepare("INSERT INTO mata_pelajaran (nama_mp) VALUES (?)");
+        $stmt->bind_param('s', $_POST['nama_mp']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=mata_pelajaran');
+}
+
+if ($act == "edit_pelajaran") {
+        $stmt = $connection->prepare("UPDATE mata_pelajaran SET nama_mp = ? WHERE idm = ?");
+        $stmt->bind_param('si', $_POST['nama_mp'], $_POST['idm']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=mata_pelajaran');
+}
+
+if ($act == "hapus_pelajaran") {
+        $stmt = $connection->prepare("DELETE FROM mata_pelajaran WHERE idm = ?");
+        $stmt->bind_param('i', $_GET['idm']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=mata_pelajaran');
+}
+
+if ($act == "input_jadwal") {
+        $stmt = $connection->prepare("INSERT INTO jadwal (idh, idg, idk, idm, jam_mulai, jam_selesai) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('iiisis', $_POST['hari'], $_POST['guru'], $_POST['kelas'], $_POST['pelajaran'], $_POST['jam_mulai'], $_POST['jam_selesai']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=senin');
+}
+
+if ($act == "edit_jadwal") {
+        $stmt = $connection->prepare("UPDATE jadwal SET idh = ?, idg = ?, idk = ?, idm = ?, jam_mulai = ?, jam_selesai = ? WHERE idj = ?");
+        $stmt->bind_param('iiisisi', $_POST['hari'], $_POST['guru'], $_POST['kelas'], $_POST['pelajaran'], $_POST['jam_mulai'], $_POST['jam_selesai'], $_POST['idj']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=senin');
+}
+
+if ($act == "hapus_jadwal") {
+        $stmt = $connection->prepare("DELETE FROM jadwal WHERE idj = ?");
+        $stmt->bind_param('i', $_GET['idj']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=senin');
+}
+
+if ($act == "input_guru") {
+        $mrg = md5($_POST['k_password']);
+        $stmt = $connection->prepare("INSERT INTO guru (nip, nama, jk, alamat, idk, pass) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('ssssss', $_POST['nip'], $_POST['nama'], $_POST['jk'], $_POST['alamat'], $_POST['kelas'], $mrg);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=guru&kls=semua');
+}
+
+if ($act == "edit_guru") {
+        $mrg = md5($_POST['k_password']);
+        $stmt = $connection->prepare("UPDATE guru SET nip = ?, nama = ?, jk = ?, alamat = ?, pass = ?, idk = ? WHERE idg = ?");
+        $stmt->bind_param('ssssssi', $_POST['nip'], $_POST['nama'], $_POST['jk'], $_POST['alamat'], $mrg, $_POST['kelas'], $_POST['idg']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=guru&kls=semua');
+}
+
+if ($act == "hapus_guru") {
+        $stmt = $connection->prepare("DELETE FROM guru WHERE idg = ?");
+        $stmt->bind_param('i', $_GET['idg']);
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Guru Sudah Terhapus', '../media.php?module=guru&kls=semua');
+}
+
+if ($act == "guru_det") {
+        if (!empty($_POST['pass'])) {
+                $pw = md5($_POST['pass']);
+                $stmt = $connection->prepare("UPDATE guru SET nama = ?, jk = ?, alamat = ?, pass = ? WHERE idg = ?");
+                $stmt->bind_param('ssssi', $_POST['nama'], $_POST['jk'], $_POST['alamat'], $pw, $_POST['idg']);
+        } else {
+                $stmt = $connection->prepare("UPDATE guru SET nama = ?, jk = ?, alamat = ? WHERE idg = ?");
+                $stmt->bind_param('sssi', $_POST['nama'], $_POST['jk'], $_POST['alamat'], $_POST['idg']);
+        }
+        $stmt->execute();
+        $stmt->close();
+        alertAndRedirect('Data Tersimpan', '../media.php?module=guru_det');
+}
+
+$connection->close();
