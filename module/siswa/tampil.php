@@ -33,7 +33,7 @@
 
                                     // Add "semua" option
                                     if ($_SESSION['level'] != "guru") {
-                                        echo "<option value=''>semua</option>";
+                                        echo "<option value='semua'>Semua</option>";
                                     }
 
                                     // Fetch and display options

@@ -11,9 +11,18 @@
             <div class="panel-heading">
                 <?php
                 $klas = isset($_GET['kls']) ? $_GET['kls'] : '';
+
                 if ($klas == "semua") {
+                    // Query for all classes
+                    $stmt = $connection->prepare("SELECT DISTINCT nama FROM kelas");
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    // Fetching just the first row for the header
+                    $row = $result->fetch_assoc();
                     echo "Data Semua Siswa";
+                    $stmt->close();
                 } else {
+                    // Query for specific class
                     $stmt = $connection->prepare("SELECT nama FROM kelas WHERE idk = ?");
                     $stmt->bind_param('i', $klas);
                     $stmt->execute();
@@ -23,6 +32,7 @@
                     $stmt->close();
                 }
                 ?>
+
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
